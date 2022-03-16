@@ -98,17 +98,16 @@ class WSTrade:
 
             # Check if account requires 2FA
             if "x-wealthsimple-otp" in response.headers:
-                if two_factor_callback == None:
+                if two_factor_callback is None:
                     raise Exception(
                         "This account requires 2FA. A 2FA callback function must be provided"
                     )
-                else:
-                    # Obtain 2FA code using callback function
-                    MFACode = two_factor_callback()
-                    # Add the 2FA code to the body of the login request
-                    data.append(("otp", MFACode))
-                    # Make a second login request using the 2FA code
-                    response = self.TradeAPI.makeRequest("POST", "auth/login", data)
+                # Obtain 2FA code using callback function
+                MFACode = two_factor_callback()
+                # Add the 2FA code to the body of the login request
+                data.append(("otp", MFACode))
+                # Make a second login request using the 2FA code
+                response = self.TradeAPI.makeRequest("POST", "auth/login", data)
 
             if response.status_code == 401:
                 raise Exception("Invalid Login")
@@ -142,10 +141,7 @@ class WSTrade:
             A list of Wealthsimple Trade account ids
         """
         userAccounts = self.get_accounts()
-        accountIDList = []
-        for account in userAccounts:
-            accountIDList.append(account["id"])
-        return accountIDList
+        return [account["id"] for account in userAccounts]
 
     def get_account(self, id: str) -> dict:
         """Get a Wealthsimple Trade account given an id
@@ -185,9 +181,8 @@ class WSTrade:
             "GET", f"account/history/{time}?account_id={id}"
         )
         response = response.json()
-        if "error" in response:
-            if response["error"] == "Record not found":
-                raise NameError(f"{id} does not correspond to any account")
+        if "error" in response and response["error"] == "Record not found":
+            raise NameError(f"{id} does not correspond to any account")
 
         return response
 
@@ -220,11 +215,7 @@ class WSTrade:
         response = response.json()
         # Check if order must be filtered:
         if symbol:
-            filteredOrders = []
-            for order in response["results"]:
-                if order["symbol"] == symbol:
-                    filteredOrders.append(order)
-            return filteredOrders
+            return [order for order in response["results"] if order["symbol"] == symbol]
         else:
             return response
 

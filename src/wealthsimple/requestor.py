@@ -97,5 +97,4 @@ class APIRequestor:
             A requests response object
         """
         auth = self.session.headers["Authorization"]
-        response = requests.get(URL, headers={"Authorization": auth})
-        return response
+        return requests.get(URL, headers={"Authorization": auth})
